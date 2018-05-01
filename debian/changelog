@@ -1,3 +1,9 @@
+puppet (3.8.5-2ubuntu0.1+bionic0+exo1) bionic; urgency=medium
+
+  * Rebuild for Bionic.
+
+ -- Vincent Bernat <bernat@debian.org>  Tue, 01 May 2018 17:05:35 +0200
+
 puppet (3.8.5-2ubuntu0.1) xenial; urgency=medium
 
   * debian/patches/0008-Default-to-systemd-if-systemd.patch: systemd is
