@@ -1,0 +1,58 @@
+Description: systemd is the default service provider if it is running
+ Rather than checking for systemd by version number, let systemd be a
+ service provider if /run/systemd/system is detected and only let upstart
+ be a provider if it is not detected.
+Author: Nishanth Aravamudan <nish.aravamudan@canonical.com>
+Bug-Ubuntu: https://launchpad.net/bugs/1570472
+
+--- puppet-3.8.5.orig/lib/puppet/provider/service/systemd.rb
++++ puppet-3.8.5/lib/puppet/provider/service/systemd.rb
+@@ -5,9 +5,25 @@ Puppet::Type.type(:service).provide :sys
+ 
+   commands :systemctl => "systemctl"
+ 
++  Facter.add(:running_on_systemd) do
++    setcode do
++      Dir.exists? "/run/systemd/system"
++    end
++  end
++
++  if Facter.value(:osfamily).downcase == 'debian'
++    # With multiple init systems on Debian, it is possible to have
++    # pieces of systemd around (e.g. systemctl) but not really be
++    # using systemd. We do not do this on other platforms as it can
++    # cause issues when running in a chroot without /run mounted
++    # (PUP-5577)
++    confine :true => Facter.value(:running_on_systemd)
++  end
++
+   defaultfor :osfamily => [:archlinux]
+   defaultfor :osfamily => :redhat, :operatingsystemmajrelease => "7"
+   defaultfor :osfamily => :redhat, :operatingsystem => :fedora, :operatingsystemmajrelease => ["17", "18", "19", "20", "21"]
++  defaultfor :operatingsystem => :ubuntu, :running_on_systemd => :true
+ 
+   def self.instances
+     i = []
+--- puppet-3.8.5.orig/lib/puppet/provider/service/upstart.rb
++++ puppet-3.8.5/lib/puppet/provider/service/upstart.rb
+@@ -11,12 +11,18 @@ Puppet::Type.type(:service).provide :ups
+   see <http://upstart.ubuntu.com/>.
+   "
+ 
++  Facter.add(:running_on_systemd) do
++    setcode do
++      Dir.exists? "/run/systemd/system"
++    end
++  end
++
+   confine :any => [
+-    Facter.value(:operatingsystem) == 'Ubuntu',
++    (Facter.value(:operatingsystem) == 'Ubuntu' and Facter.value(:running_on_systemd) == :false),
+     (Facter.value(:osfamily) == 'RedHat' and Facter.value(:operatingsystemrelease) =~ /^6\./),
+   ]
+ 
+-  defaultfor :operatingsystem => :ubuntu
++  defaultfor :operatingsystem => :ubuntu, :running_on_systemd => :false
+ 
+   commands :start   => "/sbin/start",
+            :stop    => "/sbin/stop",

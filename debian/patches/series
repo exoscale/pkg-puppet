@@ -1,0 +1,8 @@
+0001-Do-not-require-rubygems.patch
+0002-Set-passenger-puppet-master-document-root.patch
+0003-fix-puppet-master-logcheck-rule.patch
+0004-Use-usr-sbin-service-for-service-management-on-Debia.patch
+0005-Fix-service-listing-and-enable-disable-in-Debian.patch
+0006-Stored-configs-compatibility-with-ActiveRecord-4.x.patch
+0007-PUP-4633-fix-non-ASCII-user-comment-with-ruby-2.1.patch
+0008-Default-to-systemd-if-systemd.patch

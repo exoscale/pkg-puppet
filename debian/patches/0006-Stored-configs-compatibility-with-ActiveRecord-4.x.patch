@@ -1,0 +1,215 @@
+From: Apollon Oikonomopoulos <apoikos@debian.org>
+Date: Thu, 12 Mar 2015 11:33:05 +0200
+Subject: Stored configs compatibility with ActiveRecord 4.x
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+Make ActiveRecord-based stored configs work again with ActiveRecord 4.x:
+
+ • Use AR::Base.clear_active_connections! instead of
+   AR::Base.verify_active_connections!
+
+ • Always call AR::Base.connection as a class method, never as an
+   instance method.
+
+ • Require 'activerecord/deprecated_finders' for AR versions later than 4.1 to
+   make all #find(:all) and #find_by_x methods work again.
+
+ • Silence AR's deprecation warnings. We know we are using deprecated
+   finders so these warnings are just (a lot of) noise.
+
+ • Drop all ":integer => true" options passed to add_index in the
+   schema. This was probably never a valid option anyway and was ignored
+   until Rails 4.x, but currently causes the DB bootstrapping to fail.
+---
+ lib/puppet/rails.rb                 |  5 ++++-
+ lib/puppet/rails/database/schema.rb | 20 ++++++++++----------
+ lib/puppet/rails/fact_name.rb       |  3 +++
+ lib/puppet/rails/fact_value.rb      |  3 +++
+ lib/puppet/rails/param_value.rb     |  4 ++--
+ lib/puppet/rails/resource_tag.rb    |  4 ++--
+ spec/unit/rails_spec.rb             |  6 +++---
+ 7 files changed, 27 insertions(+), 18 deletions(-)
+
+diff --git a/lib/puppet/rails.rb b/lib/puppet/rails.rb
+index 2c97c02..adb20fb 100644
+--- a/lib/puppet/rails.rb
++++ b/lib/puppet/rails.rb
+@@ -8,6 +8,9 @@ module Puppet::Rails
+   TIME_DEBUG = true
+ 
+   def self.connect
++    # Silence activerecord deprecation warnings
++    ActiveSupport::Deprecation.silenced = true
++
+     # This global init does not work for testing, because we remove
+     # the state dir on every test.
+     return if ActiveRecord::Base.connected?
+@@ -26,7 +29,7 @@ module Puppet::Rails
+     # As of ActiveRecord 2.2 allow_concurrency has been deprecated and no longer has any effect.
+     ActiveRecord::Base.allow_concurrency = true if Puppet::Util.activerecord_version < 2.2
+ 
+-    ActiveRecord::Base.verify_active_connections!
++    ActiveRecord::Base.clear_active_connections!
+ 
+     begin
+       args = database_arguments
+diff --git a/lib/puppet/rails/database/schema.rb b/lib/puppet/rails/database/schema.rb
+index 931a1b6..1216719 100644
+--- a/lib/puppet/rails/database/schema.rb
++++ b/lib/puppet/rails/database/schema.rb
+@@ -19,8 +19,8 @@ class Puppet::Rails::Schema
+           t.column :updated_at, :datetime
+           t.column :created_at, :datetime
+         end
+-        add_index :resources, :host_id, :integer => true
+-        add_index :resources, :source_file_id, :integer => true
++        add_index :resources, :host_id
++        add_index :resources, :source_file_id
+ 
+         # Thanks, mysql!  MySQL requires a length on indexes in text fields.
+         # So, we provide them for mysql and handle everything else specially.
+@@ -45,8 +45,8 @@ class Puppet::Rails::Schema
+           t.column :updated_at, :datetime
+           t.column :created_at, :datetime
+         end
+-        add_index :resource_tags, :resource_id, :integer => true
+-        add_index :resource_tags, :puppet_tag_id, :integer => true
++        add_index :resource_tags, :resource_id
++        add_index :resource_tags, :puppet_tag_id
+ 
+         create_table :puppet_tags do |t|
+           t.column :name, :string
+@@ -55,7 +55,7 @@ class Puppet::Rails::Schema
+         end
+ 
+         # Oracle automatically creates a primary key index
+-        add_index :puppet_tags, :id, :integer => true if Puppet[:dbadapter] != "oracle_enhanced"
++        add_index :puppet_tags, :id if Puppet[:dbadapter] != "oracle_enhanced"
+ 
+         create_table :hosts do |t|
+           t.column :name, :string, :null => false
+@@ -69,7 +69,7 @@ class Puppet::Rails::Schema
+           t.column :source_file_id, :integer
+           t.column :created_at, :datetime
+         end
+-        add_index :hosts, :source_file_id, :integer => true
++        add_index :hosts, :source_file_id
+         add_index :hosts, :name
+ 
+         create_table :fact_names do |t|
+@@ -86,8 +86,8 @@ class Puppet::Rails::Schema
+           t.column :updated_at, :datetime
+           t.column :created_at, :datetime
+         end
+-        add_index :fact_values, :fact_name_id, :integer => true
+-        add_index :fact_values, :host_id, :integer => true
++        add_index :fact_values, :fact_name_id
++        add_index :fact_values, :host_id
+ 
+         create_table :param_values do |t|
+           t.column :value,  :text, :null => false
+@@ -97,8 +97,8 @@ class Puppet::Rails::Schema
+           t.column :updated_at, :datetime
+           t.column :created_at, :datetime
+         end
+-        add_index :param_values, :param_name_id, :integer => true
+-        add_index :param_values, :resource_id, :integer => true
++        add_index :param_values, :param_name_id
++        add_index :param_values, :resource_id
+ 
+         create_table :param_names do |t|
+           t.column :name, :string, :null => false
+diff --git a/lib/puppet/rails/fact_name.rb b/lib/puppet/rails/fact_name.rb
+index 073bbcb..5fe5264 100644
+--- a/lib/puppet/rails/fact_name.rb
++++ b/lib/puppet/rails/fact_name.rb
+@@ -1,4 +1,7 @@
+ require 'active_record'
++if Gem::Version.new(ActiveRecord::VERSION::STRING) >= Gem::Version.new('4.1')
++  require 'active_record/deprecated_finders'
++end
+ require 'puppet/rails'
+ require 'puppet/rails/fact_value'
+ 
+diff --git a/lib/puppet/rails/fact_value.rb b/lib/puppet/rails/fact_value.rb
+index 918c0ac..d1657b9 100644
+--- a/lib/puppet/rails/fact_value.rb
++++ b/lib/puppet/rails/fact_value.rb
+@@ -1,4 +1,7 @@
+ require 'active_record'
++if Gem::Version.new(ActiveRecord::VERSION::STRING) >= Gem::Version.new('4.1')
++  require 'active_record/deprecated_finders'
++end
+ 
+ class Puppet::Rails::FactValue < ActiveRecord::Base
+   belongs_to :fact_name
+diff --git a/lib/puppet/rails/param_value.rb b/lib/puppet/rails/param_value.rb
+index d7c88f8..e082ed8 100644
+--- a/lib/puppet/rails/param_value.rb
++++ b/lib/puppet/rails/param_value.rb
+@@ -48,7 +48,7 @@ class Puppet::Rails::ParamValue < ActiveRecord::Base
+ 
+   # returns an array of hash containing all the parameters of a given resource
+   def self.find_all_params_from_resource(db_resource)
+-    params = db_resource.connection.select_all("SELECT v.id, v.value, v.line, v.resource_id, v.param_name_id, n.name FROM param_values v INNER JOIN param_names n ON v.param_name_id=n.id WHERE v.resource_id=#{db_resource.id}")
++    params = ActiveRecord::Base.connection.select_all("SELECT v.id, v.value, v.line, v.resource_id, v.param_name_id, n.name FROM param_values v INNER JOIN param_names n ON v.param_name_id=n.id WHERE v.resource_id=#{db_resource.id}")
+     params.each do |val|
+       val['value'] = unserialize_value(val['value'])
+       val['line'] = val['line'] ? Integer(val['line']) : nil
+@@ -59,7 +59,7 @@ class Puppet::Rails::ParamValue < ActiveRecord::Base
+ 
+   # returns an array of hash containing all the parameters of a given host
+   def self.find_all_params_from_host(db_host)
+-    params = db_host.connection.select_all("SELECT v.id, v.value,  v.line, v.resource_id, v.param_name_id, n.name FROM param_values v INNER JOIN resources r ON v.resource_id=r.id INNER JOIN param_names n ON v.param_name_id=n.id WHERE r.host_id=#{db_host.id}")
++    params = ActiveRecord::Base.connection.select_all("SELECT v.id, v.value,  v.line, v.resource_id, v.param_name_id, n.name FROM param_values v INNER JOIN resources r ON v.resource_id=r.id INNER JOIN param_names n ON v.param_name_id=n.id WHERE r.host_id=#{db_host.id}")
+     params.each do |val|
+       val['value'] = unserialize_value(val['value'])
+       val['line'] = val['line'] ? Integer(val['line']) : nil
+diff --git a/lib/puppet/rails/resource_tag.rb b/lib/puppet/rails/resource_tag.rb
+index 1c1aa45..1493d3e 100644
+--- a/lib/puppet/rails/resource_tag.rb
++++ b/lib/puppet/rails/resource_tag.rb
+@@ -8,7 +8,7 @@ class Puppet::Rails::ResourceTag < ActiveRecord::Base
+ 
+   # returns an array of hash containing tags of resource
+   def self.find_all_tags_from_resource(db_resource)
+-    tags = db_resource.connection.select_all("SELECT t.id, t.resource_id, p.name FROM resource_tags t INNER JOIN puppet_tags p ON t.puppet_tag_id=p.id WHERE t.resource_id=#{db_resource.id}")
++    tags = ActiveRecord::Base.connection.select_all("SELECT t.id, t.resource_id, p.name FROM resource_tags t INNER JOIN puppet_tags p ON t.puppet_tag_id=p.id WHERE t.resource_id=#{db_resource.id}")
+     tags.each do |val|
+       val['resource_id'] = Integer(val['resource_id'])
+     end
+@@ -17,7 +17,7 @@ class Puppet::Rails::ResourceTag < ActiveRecord::Base
+ 
+   # returns an array of hash containing tags of a host
+   def self.find_all_tags_from_host(db_host)
+-    tags = db_host.connection.select_all("SELECT t.id, t.resource_id, p.name FROM resource_tags t INNER JOIN resources r ON t.resource_id=r.id INNER JOIN puppet_tags p ON t.puppet_tag_id=p.id WHERE r.host_id=#{db_host.id}")
++    tags = ActiveRecord::Base.connection.select_all("SELECT t.id, t.resource_id, p.name FROM resource_tags t INNER JOIN resources r ON t.resource_id=r.id INNER JOIN puppet_tags p ON t.puppet_tag_id=p.id WHERE r.host_id=#{db_host.id}")
+     tags.each do |val|
+       val['resource_id'] = Integer(val['resource_id'])
+     end
+diff --git a/spec/unit/rails_spec.rb b/spec/unit/rails_spec.rb
+index b12f81f..2fb0e4f 100755
+--- a/spec/unit/rails_spec.rb
++++ b/spec/unit/rails_spec.rb
+@@ -37,7 +37,7 @@ describe Puppet::Rails, "when initializing any connection", :if => Puppet.featur
+     logger.expects(:level=).with(Logger::DEBUG)
+ 
+     ActiveRecord::Base.stubs(:allow_concurrency=)
+-    ActiveRecord::Base.stubs(:verify_active_connections!)
++    ActiveRecord::Base.stubs(:clear_active_connections!)
+     ActiveRecord::Base.stubs(:establish_connection)
+     Puppet::Rails.stubs(:database_arguments).returns({})
+ 
+@@ -60,8 +60,8 @@ describe Puppet::Rails, "when initializing any connection", :if => Puppet.featur
+     end
+   end
+ 
+-  it "should call ActiveRecord::Base.verify_active_connections!" do
+-    ActiveRecord::Base.expects(:verify_active_connections!)
++  it "should call ActiveRecord::Base.clear_active_connections!" do
++    ActiveRecord::Base.expects(:clear_active_connections!)
+ 
+     Puppet::Rails.connect
+   end

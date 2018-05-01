@@ -1,0 +1,39 @@
+puppet (3.7.2-3) unstable; urgency=medium
+ 
+  The START flag in /etc/default/puppet is since 3.2.4-1 no longer effective.
+  To preserve state across upgrades for old setups where the puppet agent was
+  disabled using the START flag, the agent will be disabled using its built-in
+  disable facility if START is not set to true. In that case, you will need to
+  run "puppet agent --enable" before the agent can connect to a puppet master.
+
+  On systems running the puppet agent via cron, make sure that you do not rely
+  on the START variable in /etc/default/puppet and instead disable the
+  service using update-rc.d or systemctl.
+
+ -- Apollon Oikonomopoulos <apoikos@debian.org>  Tue, 10 Mar 2015 14:54:15 +0200
+
+puppet (3.2.4-1) unstable; urgency=high
+
+  The puppet agent is now started by default, regardless of init system.
+
+    - On a fresh installation, you will need to run "puppet agent --enable"
+      before it will connect to a puppet master to retrieve its catalog.
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Fri, 16 Aug 2013 14:39:55 +0200
+
+puppet (3.1.0-1) experimental; urgency=low
+
+  Puppet 3.x introduces incompatible changes.
+  
+  For the puppet DSL, dynamic variable scoping has been removed. This
+  means that your manifests may need changes to work as intended. See
+  http://docs.puppetlabs.com/guides/scope_and_puppet.html
+
+  Authorization of clients in /etc/puppet/auth.conf now matches client
+  certificate names only. There is a new allow_ip keyword in auth.conf if
+  you want to permit IP addresses.
+
+  For the full list of changes, see:
+  http://projects.puppetlabs.com/projects/puppet/wiki/Release_Notes#3.1.0
+
+ -- Stig Sandbeck Mathisen <ssm@debian.org>  Mon, 04 Mar 2013 08:48:15 +0100

@@ -1,0 +1,6 @@
+Tests: run-small-tests
+Depends: puppet-common
+
+Tests: run-large-tests
+Depends: puppetmaster-passenger,perl
+Restrictions: needs-root,isolation-container
