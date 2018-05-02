@@ -32,7 +32,6 @@ Depends: ${misc:Depends},
  ruby-rgen,
  ruby-safe-yaml,
  ruby-shadow,
- sysv-rc | file-rc,
 Recommends:
  debconf-utils,
  lsb-release,
