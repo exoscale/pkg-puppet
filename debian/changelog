@@ -1,3 +1,9 @@
+puppet (3.8.5-2ubuntu0.1+bionic0+exo3) bionic; urgency=medium
+
+  * Don't monkey-patch for OpenSSL and SSLv2.
+
+ -- Vincent Bernat <bernat@debian.org>  Wed, 02 May 2018 14:33:15 +0200
+
 puppet (3.8.5-2ubuntu0.1+bionic0+exo2) bionic; urgency=medium
 
   * Don't depends on sysv-rc.

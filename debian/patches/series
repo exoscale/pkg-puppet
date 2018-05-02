@@ -6,3 +6,4 @@
 0006-Stored-configs-compatibility-with-ActiveRecord-4.x.patch
 0007-PUP-4633-fix-non-ASCII-user-comment-with-ruby-2.1.patch
 0008-Default-to-systemd-if-systemd.patch
+no-openssl-monkeypatch.patch

@@ -1,0 +1,34 @@
+Index: puppet-3.8.5/lib/puppet/util/monkey_patches.rb
+===================================================================
+--- puppet-3.8.5.orig/lib/puppet/util/monkey_patches.rb
++++ puppet-3.8.5/lib/puppet/util/monkey_patches.rb
+@@ -167,29 +167,6 @@ class Range
+   alias_method :&, :intersection unless method_defined? :&
+ end
+ 
+-# (#19151) Reject all SSLv2 ciphers and handshakes
+-require 'openssl'
+-class OpenSSL::SSL::SSLContext
+-  if DEFAULT_PARAMS[:options]
+-    DEFAULT_PARAMS[:options] |= OpenSSL::SSL::OP_NO_SSLv2 | OpenSSL::SSL::OP_NO_SSLv3
+-  else
+-    DEFAULT_PARAMS[:options] = OpenSSL::SSL::OP_NO_SSLv2 | OpenSSL::SSL::OP_NO_SSLv3
+-  end
+-  DEFAULT_PARAMS[:ciphers] << ':!SSLv2'
+-
+-  alias __original_initialize initialize
+-  private :__original_initialize
+-
+-  def initialize(*args)
+-    __original_initialize(*args)
+-    params = {
+-      :options => DEFAULT_PARAMS[:options],
+-      :ciphers => DEFAULT_PARAMS[:ciphers],
+-    }
+-    set_params(params)
+-  end
+-end
+-
+ require 'puppet/util/platform'
+ if Puppet::Util::Platform.windows?
+   require 'puppet/util/windows'
