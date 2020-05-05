@@ -1,3 +1,9 @@
+puppet (3.8.5-2ubuntu0.1+focal0+exo1) focal; urgency=medium
+
+  * Rebuild for focal
+
+ -- Alexandros Afentoulis <alexandros.afentoulis@exoscale.ch>  Tue, 05 May 2020 13:44:14 +0300
+
 puppet (3.8.5-2ubuntu0.1+bionic0+exo3) bionic; urgency=medium
 
   * Don't monkey-patch for OpenSSL and SSLv2.
