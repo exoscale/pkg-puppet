@@ -1,3 +1,10 @@
+puppet (3.8.5-2ubuntu0.1+focal0+exo2) focal; urgency=medium
+
+  * Add ruby-sync runtime dependencay.
+  * Mute Ruby deprecation warnings.
+
+ -- Alexandros Afentoulis <alexaf@mainframe>  Wed, 13 May 2020 13:21:26 +0300
+
 puppet (3.8.5-2ubuntu0.1+focal0+exo1) focal; urgency=medium
 
   * Rebuild for focal
