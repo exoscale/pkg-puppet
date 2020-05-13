@@ -33,6 +33,7 @@ Depends: ${misc:Depends},
  ruby-safe-yaml,
  ruby-shadow,
  ruby-xmlrpc,
+ ruby-sync,
 Recommends:
  debconf-utils,
  lsb-release,
