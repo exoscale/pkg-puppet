@@ -1,0 +1,14 @@
+Description: Mute Ruby 2.7 deprecation warnings
+Author: Alexandros Afentoulis <alexandros.afentoulis@exoscale.ch>
+
+--- puppet-3.8.5.orig/bin/puppet
++++ puppet-3.8.5/bin/puppet
+@@ -4,5 +4,8 @@
+ # This is primarily for 1.8.7 since 1.9.2+ doesn't put '.' on the load path
+ $LOAD_PATH.delete '.'
+
++# Mute ruby 2.7 deprecation warnings
++$VERBOSE = nil
++
+ require 'puppet/util/command_line'
+ Puppet::Util::CommandLine.new.execute
