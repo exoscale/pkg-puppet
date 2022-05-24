@@ -9,11 +9,10 @@ Uploaders: Micah Anderson <micah@debian.org>,
  Stig Sandbeck Mathisen <ssm@debian.org>,
  Apollon Oikonomopoulos <apoikos@debian.org>
 Build-Depends:
- debhelper (>= 9~),
- dh-systemd,
- facter (<< 3),
+ debhelper (>= 12),
+ facter,
  rake,
- hiera (<< 3),
+ hiera,
 Standards-Version: 3.9.6
 Vcs-Git: git://anonscm.debian.org/pkg-puppet/puppet.git
 Vcs-Browser: http://anonscm.debian.org/cgit/pkg-puppet/puppet.git
@@ -24,9 +23,9 @@ Package: puppet-common
 Architecture: all
 Depends: ${misc:Depends},
  adduser,
- facter (<< 3),
+ facter,
  ruby-augeas,
- hiera (<< 3),
+ hiera,
  lsb-base,
  ruby | ruby-interpreter,
  ruby-rgen,
