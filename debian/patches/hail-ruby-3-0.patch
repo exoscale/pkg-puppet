@@ -1,0 +1,45 @@
+diff -urN puppet-3.8.5.orig/install.rb puppet-3.8.5/install.rb
+--- puppet-3.8.5.orig/install.rb	2016-01-21 16:29:51.000000000 +0100
++++ puppet-3.8.5/install.rb	2022-05-24 10:25:01.070529740 +0200
+@@ -70,7 +70,7 @@
+     if $haveftools
+       File.install(cf, ocf, 0644, true)
+     else
+-      FileUtils.install(cf, ocf, {:mode => 0644, :preserve => true, :verbose => true})
++      FileUtils.install(cf, ocf, :mode => 0644, :preserve => true, :verbose => true)
+     end
+   end
+ 
+@@ -80,7 +80,7 @@
+     if $haveftools
+       File.install(src_dll, dst_dll, 0644, true)
+     else
+-      FileUtils.install(src_dll, dst_dll, {:mode => 0644, :preserve => true, :verbose => true})
++      FileUtils.install(src_dll, dst_dll, :mode => 0644, :preserve => true, :verbose => true)
+     end
+ 
+     require 'win32/registry'
+@@ -115,9 +115,9 @@
+       File.chmod(0755, op)
+       File.install(lf, olf, 0644, true)
+     else
+-      FileUtils.makedirs(op, {:mode => 0755, :verbose => true})
++      FileUtils.makedirs(op, :mode => 0755, :verbose => true)
+       FileUtils.chmod(0755, op)
+-      FileUtils.install(lf, olf, {:mode => 0644, :preserve => true, :verbose => true})
++      FileUtils.install(lf, olf, :mode => 0644, :preserve => true, :verbose => true)
+     end
+   end
+ end
+@@ -131,9 +131,9 @@
+       File.chmod(0755, om)
+       File.install(mf, omf, 0644, true)
+     else
+-      FileUtils.makedirs(om, {:mode => 0755, :verbose => true})
++      FileUtils.makedirs(om, :mode => 0755, :verbose => true)
+       FileUtils.chmod(0755, om)
+-      FileUtils.install(mf, omf, {:mode => 0644, :preserve => true, :verbose => true})
++      FileUtils.install(mf, omf, :mode => 0644, :preserve => true, :verbose => true)
+     end
+     gzip = %x{which gzip}
+     gzip.chomp!
