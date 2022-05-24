@@ -34,5 +34,8 @@ override_dh_installexamples:
 	find debian/puppet-common/usr/share/doc/puppet-common/examples -type f -print0 | \
 	  xargs -r -0 chmod 644
 
+override_dh_builddeb:
+	dh_builddeb -- -Zxz
+
 override_dh_clean:
 	dh_clean debian/puppet-common.logcheck.ignore.server metadata.yml
