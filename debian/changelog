@@ -1,3 +1,9 @@
+puppet (3.8.5-2ubuntu0.1+xenial0+exo1) xenial; urgency=medium
+
+  * Build for Xenial
+
+ -- Yann Provost <yann.provost@exoscale.ch>  Tue, 28 Mar 2023 21:22:15 +0100
+
 puppet (3.8.5-2ubuntu0.1) xenial; urgency=medium
 
   * debian/patches/0008-Default-to-systemd-if-systemd.patch: systemd is
